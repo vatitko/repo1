@@ -1,22 +1,35 @@
 pipeline {
     agent any
 
+    environment {
+        PYTHONUNBUFFERED = '1'
+    }
+
     stages {
-        stage('Clone') {
+        stage('Checkout') {
             steps {
-                git 'https://github.com/vatitko/repo1.git'
+                // Jenkins automatically checks out the code, but you can make it explicit
+                checkout scm
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh 'pip install -r requirements.txt'
+                sh '''
+                    python3 -m venv venv
+                    source venv/bin/activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                '''
             }
         }
 
         stage('Run App') {
             steps {
-                sh 'nohup python app.py &'
+                sh '''
+                    source venv/bin/activate
+                    nohup python app.py > output.log 2>&1 &
+                '''
             }
         }
     }
